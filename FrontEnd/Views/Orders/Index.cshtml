@@ -1,0 +1,25 @@
+@model FrontEnd.Models.OrderPageModel
+@{ ViewData["Title"] = "Sales Orders"; }
+<section class="filter-panel">
+	<form method="get" class="filter-grid">
+		<label class="filter-field"><span>Keywords</span><input name="keyword" value="@ViewBag.Keyword" placeholder="Input Here" /></label>
+		<label class="filter-field date-field"><span>Order Date</span><span class="date-input"><input name="orderDate" value="@ViewBag.OrderDate" type="date" placeholder="Pick Date" /><span aria-hidden="true">▣</span></span></label>
+		<button class="search-button" type="submit">Search</button>
+	</form>
+</section>
+@if (TempData["Message"] is string message) { <div class="notice">@message</div> }
+<div class="toolbar">
+	<a class="action-button add-button" asp-action="Create">Add New Data</a>
+	<a class="action-button export-button" href="@($"http://localhost:5002/api/orders/export?keyword={Uri.EscapeDataString((string?)ViewBag.Keyword ?? "")}&orderDate={ViewBag.OrderDate}")"><span class="excel-mark">X</span> Export To Excel</a>
+	<button class="hint-button" type="button" title="Gunakan filter untuk mencari order">♧ HINT</button>
+</div>
+<section class="orders-table-wrap">
+	<table class="orders-table">
+		<thead><tr><th class="number-col">No</th><th class="action-col">Action</th><th>Sales Order</th><th>Order Date</th><th>Customer</th><th class="address-col">Address</th><th class="total-col">Grand Total</th></tr></thead>
+		<tbody>
+		@if (Model.Items.Count == 0) { <tr><td colspan="7" class="empty-row">Belum ada order.</td></tr> }
+		else { @for (var i = 0; i < Model.Items.Count; i++) { var order = Model.Items[i]; <tr><td class="number-col" data-label="No">@((Model.Page - 1) * Model.PageSize + i + 1)</td><td class="action-col" data-label="Action"><a class="icon-button edit-icon" asp-action="Edit" asp-route-id="@order.Id" title="Edit order">✎</a><form asp-action="Delete" asp-route-id="@order.Id" method="post" class="d-inline" onsubmit="return confirm('Hapus order @order.SoNo? Tindakan ini tidak dapat dibatalkan.');"><button class="icon-button delete-icon" title="Hapus order">⌫</button></form></td><td class="order-number" data-label="Sales Order">@order.SoNo</td><td data-label="Order Date">@order.OrderDate.ToString("d/M/yyyy")</td><td class="customer-name" data-label="Customer">@order.CustomerName</td><td class="address-col" data-label="Address">@order.Address</td><td class="total-col" data-label="Grand Total">Rp @order.GrandTotal.ToString("N0")</td></tr> } }
+		</tbody>
+	</table>
+	<div class="table-footer">@if (Model.TotalItems > Model.PageSize) { <div class="pagination"><a asp-route-keyword="@ViewBag.Keyword" asp-route-orderDate="@ViewBag.OrderDate" asp-route-page="1" title="Halaman pertama">‹|</a><a asp-route-keyword="@ViewBag.Keyword" asp-route-orderDate="@ViewBag.OrderDate" asp-route-page="@(Model.Page - 1)" class="@(Model.Page <= 1 ? "disabled" : "")" title="Halaman sebelumnya">‹</a>@for (var pageNumber = 1; pageNumber <= Model.TotalPages; pageNumber++) { <a asp-route-keyword="@ViewBag.Keyword" asp-route-orderDate="@ViewBag.OrderDate" asp-route-page="@pageNumber" class="@(pageNumber == Model.Page ? "current-page" : "")">@pageNumber</a> }<a asp-route-keyword="@ViewBag.Keyword" asp-route-orderDate="@ViewBag.OrderDate" asp-route-page="@(Model.Page + 1)" class="@(Model.Page >= Model.TotalPages ? "disabled" : "")" title="Halaman berikutnya">›</a><a asp-route-keyword="@ViewBag.Keyword" asp-route-orderDate="@ViewBag.OrderDate" asp-route-page="@Model.TotalPages" title="Halaman terakhir">|›</a></div> }<span>@(Model.TotalItems == 0 ? 0 : (Model.Page - 1) * Model.PageSize + 1) - @(Math.Min(Model.Page * Model.PageSize, Model.TotalItems)) of @Model.TotalItems items</span></div>
+</section>
